@@ -1,1 +1,1 @@
-# bazy-danych-quiz
+# Bazy Danych - quiz
