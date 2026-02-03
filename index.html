@@ -57,7 +57,7 @@
         .then(data => {
             questions = data.questions;
             // Opcjonalnie: pomieszaj pytania
-            // questions.sort(() => Math.random() - 0.5);
+            questions.sort(() => Math.random() - 0.5);
             loadQuestion();
         })
         .catch(error => {
@@ -134,4 +134,5 @@
 </script>
 
 </body>
+
 </html>
