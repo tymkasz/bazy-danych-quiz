@@ -22,4 +22,4 @@ Jeśli nie chcesz korzystać z wersji online, możesz pobrać projekt na dysk:
 3. Otwórz plik `index.html` w dowolnej przeglądarce.
 
 ## Dostęp
-Wersja online jest zabezpieczona prostym hasłem, aby ograniczyć dostęp do grupy studenckiej.
+Wersja online jest zabezpieczona prostym hasłem.
