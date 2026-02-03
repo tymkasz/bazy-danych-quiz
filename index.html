@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz z Baz Danych</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .quiz-container { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px; width: 100%; }
+        h1 { font-size: 1.2rem; color: #333; margin-bottom: 1rem; }
+        .question-text { font-size: 1.1rem; font-weight: 600; margin-bottom: 1.5rem; color: #2c3e50; }
+        .options { display: flex; flex-direction: column; gap: 10px; }
+        .option-btn { padding: 12px; border: 2px solid #e0e0e0; background: white; border-radius: 8px; cursor: pointer; text-align: left; transition: all 0.2s; font-size: 1rem; }
+        .option-btn:hover:not(:disabled) { background-color: #f0f8ff; border-color: #3498db; }
+        .option-btn.correct { background-color: #d4edda; border-color: #28a745; color: #155724; }
+        .option-btn.wrong { background-color: #f8d7da; border-color: #dc3545; color: #721c24; }
+        .feedback { margin-top: 20px; padding: 15px; background-color: #e2e6ea; border-radius: 8px; display: none; }
+        .controls { margin-top: 20px; display: flex; justify-content: space-between; align-items: center; }
+        button#next-btn { background-color: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; display: none; }
+        button#next-btn:hover { background-color: #2980b9; }
+        .progress { color: #7f8c8d; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div class="header">
+        <h1>Egzamin Bazy Danych</h1>
+        <div class="progress" id="progress">Pytanie 1 z ...</div>
+    </div>
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 10px 0;">
+    
+    <div id="quiz-box">
+        <div class="question-text" id="question">Ładowanie pytań...</div>
+        <div class="options" id="options"></div>
+        <div class="feedback" id="feedback"></div>
+    </div>
+
+    <div class="controls">
+        <button id="next-btn">Następne pytanie</button>
+    </div>
+</div>
+
+<script>
+    const password = prompt("Podaj hasło, aby wejść:");
+    if (password !== "teodor") { 
+        document.body.innerHTML = "<h1>Brak dostępu. Odśwież stronę i podaj poprawne hasło.</h1>";
+        throw new Error("Błędne hasło");
+    }
+
+    let questions = [];
+    let currentQuestionIndex = 0;
+
+    // Pobieranie pliku JSON
+    fetch('complete_db_quiz.json')
+        .then(response => response.json())
+        .then(data => {
+            questions = data.questions;
+            // Opcjonalnie: pomieszaj pytania
+            // questions.sort(() => Math.random() - 0.5);
+            loadQuestion();
+        })
+        .catch(error => {
+            document.getElementById('question').innerText = "Błąd ładowania pliku JSON. Upewnij się, że plik 'complete_db_quiz.json' jest w tym samym folderze.";
+            console.error(error);
+        });
+
+    function loadQuestion() {
+        const q = questions[currentQuestionIndex];
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const feedbackEl = document.getElementById('feedback');
+        const nextBtn = document.getElementById('next-btn');
+        const progressEl = document.getElementById('progress');
+
+        // Reset widoku
+        feedbackEl.style.display = 'none';
+        feedbackEl.innerText = '';
+        nextBtn.style.display = 'none';
+        optionsEl.innerHTML = '';
+
+        // Ustawienie treści
+        progressEl.innerText = `Pytanie ${currentQuestionIndex + 1} z ${questions.length}`;
+        questionEl.innerText = q.question;
+
+        // Generowanie przycisków
+        q.answerOptions.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.classList.add('option-btn');
+            btn.innerText = opt.text;
+            btn.onclick = () => checkAnswer(opt, q, btn);
+            optionsEl.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selectedOption, questionObj, btnElement) {
+        const feedbackEl = document.getElementById('feedback');
+        const nextBtn = document.getElementById('next-btn');
+        const allBtns = document.querySelectorAll('.option-btn');
+
+        // Zablokuj wszystkie przyciski
+        allBtns.forEach(btn => btn.disabled = true);
+
+        if (selectedOption.isCorrect) {
+            btnElement.classList.add('correct');
+            feedbackEl.style.backgroundColor = '#d4edda';
+            feedbackEl.style.color = '#155724';
+            feedbackEl.innerHTML = `<strong>Dobrze!</strong><br>${selectedOption.rationale || ''}`;
+        } else {
+            btnElement.classList.add('wrong');
+            feedbackEl.style.backgroundColor = '#f8d7da';
+            feedbackEl.style.color = '#721c24';
+            
+            // Znajdź i podświetl poprawną odpowiedź
+            const correctOpt = questionObj.answerOptions.find(o => o.isCorrect);
+            const correctBtn = Array.from(allBtns).find(b => b.innerText === correctOpt.text);
+            if(correctBtn) correctBtn.classList.add('correct');
+
+            feedbackEl.innerHTML = `<strong>Źle.</strong><br>${selectedOption.rationale || ''}`;
+        }
+
+        feedbackEl.style.display = 'block';
+        nextBtn.style.display = 'block';
+    }
+
+    document.getElementById('next-btn').addEventListener('click', () => {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < questions.length) {
+            loadQuestion();
+        } else {
+            document.querySelector('.quiz-container').innerHTML = '<h2>Koniec quizu!</h2><p>Gratulacje, przeszedłeś przez wszystkie pytania.</p><button class="option-btn" onclick="location.reload()">Rozpocznij od nowa</button>';
+        }
+    });
+</script>
+
+</body>
+</html>
