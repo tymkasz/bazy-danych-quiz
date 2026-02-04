@@ -20,6 +20,15 @@
         button#next-btn:hover { background-color: #2980b9; }
         .progress { color: #7f8c8d; font-size: 0.9rem; }
     </style>
+    
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+      };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
 
@@ -91,6 +100,11 @@
             btn.onclick = () => checkAnswer(opt, q, btn);
             optionsEl.appendChild(btn);
         });
+
+        // Wymuś renderowanie MathJax po załadowaniu nowej treści
+        if (window.MathJax) {
+            MathJax.typesetPromise();
+        }
     }
 
     function checkAnswer(selectedOption, questionObj, btnElement) {
@@ -121,6 +135,11 @@
 
         feedbackEl.style.display = 'block';
         nextBtn.style.display = 'block';
+
+        // Wymuś renderowanie MathJax dla wyjaśnienia (rationale)
+        if (window.MathJax) {
+            MathJax.typesetPromise([feedbackEl]);
+        }
     }
 
     document.getElementById('next-btn').addEventListener('click', () => {
@@ -134,5 +153,4 @@
 </script>
 
 </body>
-
 </html>
